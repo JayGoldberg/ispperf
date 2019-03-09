@@ -78,11 +78,10 @@ upload () {
     HOST=$1
     SIZE=$2
     MAXSECS=$3
-    # get random data from openssl. '-hex' will output two characters for each byte, therefore desired
-    # size has to be divided by two. this is only approximate, but that's ok.
-    DATA=$(openssl rand $((SIZE/2)) -hex)
+    # generate random segment of data of $SIZE bytes
+    DATA="$(hexdump -C /dev/urandom | cut -b9- | cut -d"|" -f1 | tr -d ' \t\n\r'|head -c ${SIZE})"
     FMT="%{time_total},%{time_namelookup},%{time_connect},%{time_starttransfer},%{size_upload},%{speed_upload}\n"
-    RND=$(r13)
+    RND="$(r13)"
     URL="$HOST/upload.php?x=0.${RND}"
     HOST=$(echo $HOST | sed -e s/\\\/.*$//g -e s/:.*$//g)
     echo -n 'u,'
