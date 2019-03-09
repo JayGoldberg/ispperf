@@ -31,7 +31,6 @@ PORTLAND_OR="speedtestportland.myfairpoint.net:8080"
 # it means that the host is windows.  you should skip that host or implement aspx in addition to php.
 HOSTS="$AUSTIN_TX $PALOALTO_CA $MIAMI_FL $BOSTON_MA $CHICAGO_IL $PORTLAND_OR $RESTON_VA $SANJOSE_CA"
 
-
 # output a timestamp
 write_timestamp () {
     date "+%m%d,%H:%M:%S," | tr -d "\n"
@@ -114,7 +113,7 @@ pingit () {
     write_timestamp
     echo -n "${HOST},"
     # ping the host. hang on to the results so return code can be kept
-    PING_VALUE=$(ping -t${MAXSECS} -c3 -Qq $HOST)
+    PING_VALUE="$(timeout $MAXSECS ping -c3 -q $HOST)"
     exit_code=$?
     if [ $exit_code -eq 0 ]; then
         # ping was successful
@@ -126,6 +125,28 @@ pingit () {
         echo "0,0,0,0"
     fi
 }
+
+if ! type timeout 2>&1 >/dev/null; then
+  timeout () {
+    local timeout_secs=${1:-10}
+    shift
+
+    [ ! -z "${timeout_secs//[0-9]}" ] && { return 65; }
+    
+    # subshell
+    ( 
+      "$@" &
+      child=$!
+      #trap - '' SIGTERM #why would we need this?
+      (       
+        sleep $timeout_secs
+        kill $child 2> /dev/null # TODO returns 143 instead of "real" timeout's 124
+      ) &
+      wait $child
+    )
+  }
+  export timeout
+fi
 
 # They use jpeg images with random content as a paylod for testing downloads.  The images are all
 # square (i.e., 'n x n').  There are nine fixed sizes of images.
