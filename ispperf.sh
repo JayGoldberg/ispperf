@@ -86,7 +86,7 @@ upload () {
     echo -n 'u,'
     write_timestamp
     echo -n "${HOST},"
-    curl -m ${MAXSECS} -s -w "$FMT" -d $DATA -o /dev/null $URL
+    echo $DATA|curl -m ${MAXSECS} -s -w "$FMT" -d @- -o /dev/null $URL
 }
 
 # test http latency by getting small file
@@ -161,15 +161,15 @@ title
 
 while true; do
     for HOST in $HOSTS; do
-        TMOUT=30                             # giveup after 30 seconds
+        TMOUT=10                             # giveup after 10 seconds
         latency $HOST $TMOUT
         pingit $HOST $TMOUT
         for SIZE in $DOWNLOAD_SIZES; do
-            TMOUT=$((60*10))                 # giveup after 10 minutes
+            TMOUT=$((60*1))                 # giveup after 1 minutes
             download $HOST $SIZE $TMOUT
         done
         for SIZE in $UPLOAD_SIZES; do
-            TMOUT=$((60*10))                 # giveup after 10 minutes
+            TMOUT=$((60*1))                 # giveup after 1 minutes
             upload $HOST $SIZE $TMOUT
         done
     done
